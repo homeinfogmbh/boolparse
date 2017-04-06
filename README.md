@@ -1,2 +1,2 @@
-# strflib
-A string formatting library
+# boolparse
+A library for boolean expression parsing
