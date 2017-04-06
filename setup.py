@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='boolparse',
-    version='1.0.0',
+    version='latest',
     author='Richard Neumann',
     py_modules=['boolparse'],
     license=open('LICENSE').read(),
