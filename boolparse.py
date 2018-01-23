@@ -74,7 +74,7 @@ def bool_val(statement, callback=_callback):
 
     callback_result = callback(statement)
 
-    if isinstance(callback_result bool):
+    if isinstance(callback_result, bool):
         return str(callback_result)
 
     raise SecurityError('Callback method did not return a boolean value.')
