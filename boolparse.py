@@ -31,6 +31,7 @@ def chklim(statements, limit=None):
 
 def tokenize(string, limit=None, operators=OPERATORS):
     """Tokenize the string."""
+
     buff = max(len(operator) for operator in operators)
     window = ''
     statements = 0
@@ -39,28 +40,29 @@ def tokenize(string, limit=None, operators=OPERATORS):
     for pos, char in enumerate(string):
         if skip:
             skip -= 1
-        else:
-            lookahead = ''
+            continue
 
-            for offset in range(0, buff):
-                try:
-                    lookahead += string[pos + offset]
-                except IndexError:
-                    window += char
-                    break
-                else:
-                    if lookahead in operators:
-                        if window:
-                            statements += 1
-                            chklim(statements, limit=limit)
-                            yield window.strip()
-                            window = ''
+        lookahead = ''
 
-                        yield lookahead
-                        skip = len(lookahead) - 1
-                        break
-            else:
+        for offset in range(buff):
+            try:
+                lookahead += string[pos + offset]
+            except IndexError:
                 window += char
+                break
+
+            if lookahead in operators:
+                if window:
+                    statements += 1
+                    chklim(statements, limit=limit)
+                    yield window.strip()
+                    window = ''
+
+                yield lookahead
+                skip = len(lookahead) - 1
+                break
+        else:
+            window += char
 
     # Process possibly remaining window
     if window:
