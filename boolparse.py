@@ -1,17 +1,16 @@
 """Boolean parser."""
 
+
 __all__ = ['SecurityError', 'evaluate']
 
 
-OPERATORS = (' and ', ' or ', 'not ', '(', ')')
+KEYWORDS = frozenset({' and ', ' or ', 'not ', '(', ')'})
 
 
 class SecurityError(Exception):
     """Indicates a possible security breach
     in parsing boolean statements.
     """
-
-    pass
 
 
 def _callback(string):
@@ -29,10 +28,10 @@ def chklim(statements, limit=None):
     raise SecurityError('Statement limit exceeded.')
 
 
-def tokenize(string, limit=None, operators=OPERATORS):
+def tokenize(string, limit=None, keywords=KEYWORDS):
     """Tokenize the string."""
 
-    buff = max(len(operator) for operator in operators)
+    buff = max(len(operator) for operator in keywords)
     window = ''
     statements = 0
     skip = 0
@@ -51,7 +50,7 @@ def tokenize(string, limit=None, operators=OPERATORS):
                 window += char
                 break
 
-            if lookahead in operators:
+            if lookahead in keywords:
                 if window:
                     statements += 1
                     chklim(statements, limit=limit)
@@ -82,14 +81,14 @@ def bool_val(statement, callback=_callback):
     raise SecurityError('Callback method did not return a boolean value.')
 
 
-def boolexpr(string, callback=_callback, limit=None, operators=OPERATORS):
+def boolexpr(string, callback=_callback, limit=None, keywords=KEYWORDS):
     """Yields boolean expression elements for python."""
 
     window = ''
 
-    for token in tokenize(string, limit=limit, operators=operators):
+    for token in tokenize(string, limit=limit, keywords=keywords):
         if token:
-            if token in operators:
+            if token in keywords:
                 if window:
                     yield bool_val(window, callback)
                     window = ''
@@ -102,10 +101,10 @@ def boolexpr(string, callback=_callback, limit=None, operators=OPERATORS):
         yield bool_val(window, callback)
 
 
-def evaluate(string, callback=_callback, limit=20, operators=OPERATORS):
+def evaluate(string, callback=_callback, limit=20, keywords=KEYWORDS):
     """Safely evaluates a boolean string."""
 
     command = ' '.join(boolexpr(
-        string, operators=operators, callback=callback, limit=limit))
+        string, keywords=keywords, callback=callback, limit=limit))
 
     return bool(eval(command))
