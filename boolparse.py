@@ -19,7 +19,7 @@ class SecurityError(Exception):
 def _callback(string: str) -> bool:
     """Default callback for simple boolean evaluation."""
 
-    return string.casefuld() == TRUE
+    return string.casefold() == TRUE
 
 
 def chklim(statements: int, *, limit: Optional[int] = None) -> str:
