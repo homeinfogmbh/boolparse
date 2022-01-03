@@ -17,7 +17,7 @@ class SecurityError(Exception):
 
 
 def bool_val(token: str, callback: Callable[[str], bool]) -> str:
-    """Evaluates the given statement into a boolean value."""
+    """Evaluate the given statement into a boolean value."""
 
     callback_result = callback(token)
 
@@ -28,7 +28,7 @@ def bool_val(token: str, callback: Callable[[str], bool]) -> str:
 
 
 def tokenize(word: str) -> Iterator[str]:
-    """Yields tokens of a string."""
+    """Yield tokens of a word."""
 
     for index, char in enumerate(word):
         if char in PARENTHESES:
@@ -40,10 +40,10 @@ def tokenize(word: str) -> Iterator[str]:
         yield word
 
 
-def boolexpr(string: str, callback: Callable[[str], bool]) -> Iterator[str]:
-    """Yields boolean expression elements for python."""
+def boolexpr(expression: str, callback: Callable[[str], bool]) -> Iterator[str]:
+    """Yield boolean expression elements for eval()."""
 
-    for word in string.strip().split():
+    for word in expression.strip().split():
         for token in filter(None, tokenize(word)):
             if token in KEYWORDS or token in PARENTHESES:
                 yield token
@@ -52,9 +52,9 @@ def boolexpr(string: str, callback: Callable[[str], bool]) -> Iterator[str]:
 
 
 def evaluate(
-        string: str, *,
+        expression: str, *,
         callback: Callable[[str], bool] = lambda s: s.casefold() == 'true'
     ) -> bool:
-    """Safely evaluates a boolean string."""
+    """Safely evaluate a boolean expression."""
 
-    return bool(eval(' '.join(boolexpr(string, callback))))
+    return bool(eval(' '.join(boolexpr(expression, callback))))
