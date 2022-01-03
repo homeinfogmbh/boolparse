@@ -33,12 +33,11 @@ def chklim(statements: int, *, limit: Optional[int] = None) -> str:
 
 def tokenize(
         string: str, *,
-        limit: Optional[int] = None,
-        keywords: frozenset[str] = KEYWORDS
+        limit: Optional[int] = None
     ) -> Iterator[str]:
     """Tokenize the string."""
 
-    buff = max(map(len, keywords))
+    buff = max(map(len, KEYWORDS))
     window = ''
     statements = 0
     skip = 0
@@ -57,14 +56,14 @@ def tokenize(
                 window += char
                 break
 
-            if lookahead in keywords:
+            if lookahead in KEYWORDS:
                 if window:
                     statements += 1
                     chklim(statements, limit=limit)
                     yield window.strip()
                     window = ''
 
-                yield lookahead
+                yield lookahead.strip()
                 skip = len(lookahead) - 1
                 break
         else:
@@ -94,18 +93,17 @@ def bool_val(
 def boolexpr(
         string: str, *,
         callback: Callable[[str], bool] = _callback,
-        limit: Optional[int] = None,
-        keywords: frozenset[str] = KEYWORDS
+        limit: Optional[int] = None
     ) -> Iterator[str]:
     """Yields boolean expression elements for python."""
 
     window = ''
 
-    for token in tokenize(string, limit=limit, keywords=keywords):
+    for token in tokenize(string, limit=limit):
         if not token:
             continue
 
-        if token not in keywords:
+        if token not in KEYWORDS:
             window += token
             continue
 
@@ -122,11 +120,10 @@ def boolexpr(
 def evaluate(
         string: str, *,
         callback: Callable[[str], bool] = _callback,
-        limit: int = 20,
-        keywords: frozenset[str] = KEYWORDS
+        limit: int = 20
     ) -> bool:
     """Safely evaluates a boolean string."""
 
     return bool(eval(''.join(boolexpr(
-        string, keywords=keywords, callback=callback, limit=limit
+        string, callback=callback, limit=limit
     ))))
