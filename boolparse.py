@@ -24,7 +24,7 @@ def bool_val(token: str, callback: Callable[[str], bool]) -> str:
     if isinstance(callback_result, bool):
         return str(callback_result)
 
-    raise SecurityError('Callback method did not return a boolean value.')
+    raise SecurityError('Callback function did not return a boolean value.')
 
 
 def tokenize(word: str) -> Iterator[str]:
