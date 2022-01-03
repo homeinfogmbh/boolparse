@@ -127,6 +127,6 @@ def evaluate(
     ) -> bool:
     """Safely evaluates a boolean string."""
 
-    return bool(eval(' '.join(boolexpr(
+    return bool(eval(''.join(boolexpr(
         string, keywords=keywords, callback=callback, limit=limit
     ))))
