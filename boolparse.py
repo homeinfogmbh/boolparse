@@ -47,9 +47,8 @@ def boolexpr(string: str, callback: Callable[[str], bool]) -> Iterator[str]:
         for token in filter(None, tokenize(word)):
             if token in KEYWORDS or token in PARENTHESES:
                 yield token
-                continue
-
-            yield bool_val(token, callback)
+            else:
+                yield bool_val(token, callback)
 
 
 def evaluate(
