@@ -1,4 +1,4 @@
-"""Boolean parser."""
+"""Boolean evaluation."""
 
 from typing import Callable, Iterator
 
