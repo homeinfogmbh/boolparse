@@ -1,13 +1,13 @@
 """Boolean parser."""
 
-from typing import Callable, Iterator, Optional
+from typing import Callable, Iterator
 
 
 __all__ = ['SecurityError', 'evaluate']
 
 
-KEYWORDS = frozenset({' and ', ' or ', 'not ', '(', ')'})
-TRUE = 'true'.casefold()
+PARENTHESES = frozenset({'(', ')'})
+KEYWORDS = frozenset({'and', 'or', 'not'})
 
 
 class SecurityError(Exception):
@@ -16,73 +16,10 @@ class SecurityError(Exception):
     """
 
 
-def _callback(string: str) -> bool:
-    """Default callback for simple boolean evaluation."""
-
-    return string.casefold() == TRUE
-
-
-def chklim(statements: int, *, limit: Optional[int] = None) -> str:
-    """Checks whether the limit has been exceeded."""
-
-    if limit is None or statements <= limit:
-        return True
-
-    raise SecurityError('Statement limit exceeded.')
-
-
-def tokenize(
-        string: str, *,
-        limit: Optional[int] = None
-    ) -> Iterator[str]:
-    """Tokenize the string."""
-
-    buff = max(map(len, KEYWORDS))
-    window = ''
-    statements = 0
-    skip = 0
-
-    for pos, char in enumerate(string):
-        if skip:
-            skip -= 1
-            continue
-
-        lookahead = ''
-
-        for offset in range(buff):
-            try:
-                lookahead += string[pos + offset]
-            except IndexError:
-                window += char
-                break
-
-            if lookahead in KEYWORDS:
-                if window:
-                    statements += 1
-                    chklim(statements, limit=limit)
-                    yield window.strip()
-                    window = ''
-
-                yield lookahead.strip()
-                skip = len(lookahead) - 1
-                break
-        else:
-            window += char
-
-    # Process possibly remaining window
-    if window:
-        statements += 1
-        chklim(statements, limit=limit)
-        yield window.strip()
-
-
-def bool_val(
-        statement: str,
-        callback: Callable[[str], bool] = _callback
-    ) -> str:
+def bool_val(token: str, callback: Callable[[str], bool]) -> str:
     """Evaluates the given statement into a boolean value."""
 
-    callback_result = callback(statement)
+    callback_result = callback(token)
 
     if isinstance(callback_result, bool):
         return str(callback_result)
@@ -90,40 +27,35 @@ def bool_val(
     raise SecurityError('Callback method did not return a boolean value.')
 
 
-def boolexpr(
-        string: str, *,
-        callback: Callable[[str], bool] = _callback,
-        limit: Optional[int] = None
-    ) -> Iterator[str]:
+def tokenize(word: str) -> Iterator[str]:
+    """Yields tokens of a string."""
+
+    for index, char in enumerate(word):
+        if char in PARENTHESES:
+            yield word[:index]
+            yield char
+            yield from tokenize(word[index+1:])
+            break
+    else:
+        yield word
+
+
+def boolexpr(string: str, callback: Callable[[str], bool]) -> Iterator[str]:
     """Yields boolean expression elements for python."""
 
-    window = ''
+    for word in string.strip().split():
+        for token in filter(None, tokenize(word)):
+            if token in KEYWORDS or token in PARENTHESES:
+                yield token
+                continue
 
-    for token in tokenize(string, limit=limit):
-        if not token:
-            continue
-
-        if token not in KEYWORDS:
-            window += token
-            continue
-
-        if window:
-            yield bool_val(window, callback)
-            window = ''
-
-        yield token
-
-    if window:
-        yield bool_val(window, callback)
+            yield bool_val(token, callback)
 
 
 def evaluate(
         string: str, *,
-        callback: Callable[[str], bool] = _callback,
-        limit: int = 20
+        callback: Callable[[str], bool] = lambda s: s.casefold() == 'true'
     ) -> bool:
     """Safely evaluates a boolean string."""
 
-    return bool(eval(''.join(boolexpr(
-        string, callback=callback, limit=limit
-    ))))
+    return bool(eval(' '.join(boolexpr(string, callback))))
