@@ -1,10 +1,13 @@
 """Boolean parser."""
 
+from typing import Callable, Iterator, Optional
+
 
 __all__ = ['SecurityError', 'evaluate']
 
 
 KEYWORDS = frozenset({' and ', ' or ', 'not ', '(', ')'})
+TRUE = 'true'.casefold()
 
 
 class SecurityError(Exception):
@@ -13,13 +16,13 @@ class SecurityError(Exception):
     """
 
 
-def _callback(string):
+def _callback(string: str) -> bool:
     """Default callback for simple boolean evaluation."""
 
-    return string.upper() == 'TRUE'
+    return string.casefuld() == TRUE
 
 
-def chklim(statements, limit=None):
+def chklim(statements: int, *, limit: Optional[int] = None) -> str:
     """Checks whether the limit has been exceeded."""
 
     if limit is None or statements <= limit:
@@ -28,7 +31,11 @@ def chklim(statements, limit=None):
     raise SecurityError('Statement limit exceeded.')
 
 
-def tokenize(string, limit=None, keywords=KEYWORDS):
+def tokenize(
+        string: str, *,
+        limit: Optional[int] = None,
+        keywords: frozenset[str] = KEYWORDS
+    ) -> Iterator[str]:
     """Tokenize the string."""
 
     buff = max(len(operator) for operator in keywords)
@@ -70,7 +77,10 @@ def tokenize(string, limit=None, keywords=KEYWORDS):
         yield window.strip()
 
 
-def bool_val(statement, callback=_callback):
+def bool_val(
+        statement: str,
+        callback: Callable[[str], bool] = _callback
+    ) -> str:
     """Evaluates the given statement into a boolean value."""
 
     callback_result = callback(statement)
@@ -81,30 +91,42 @@ def bool_val(statement, callback=_callback):
     raise SecurityError('Callback method did not return a boolean value.')
 
 
-def boolexpr(string, callback=_callback, limit=None, keywords=KEYWORDS):
+def boolexpr(
+        string: str, *,
+        callback: Callable[[str], bool] = _callback,
+        limit: Optional[int] = None,
+        keywords: frozenset[str] = KEYWORDS
+    ) -> Iterator[str]:
     """Yields boolean expression elements for python."""
 
     window = ''
 
     for token in tokenize(string, limit=limit, keywords=keywords):
-        if token:
-            if token in keywords:
-                if window:
-                    yield bool_val(window, callback)
-                    window = ''
+        if not token:
+            continue
 
-                yield token
-            else:
-                window += token
+        if token not in keywords:
+            window += token
+            continue
+
+        if window:
+            yield bool_val(window, callback)
+            window = ''
+
+        yield token
 
     if window:
         yield bool_val(window, callback)
 
 
-def evaluate(string, callback=_callback, limit=20, keywords=KEYWORDS):
+def evaluate(
+        string: str, *,
+        callback: Callable[[str], bool] = _callback,
+        limit: int = 20,
+        keywords: frozenset[str] = KEYWORDS
+    ) -> bool:
     """Safely evaluates a boolean string."""
 
-    command = ' '.join(boolexpr(
-        string, keywords=keywords, callback=callback, limit=limit))
-
-    return bool(eval(command))
+    return bool(eval(' '.join(boolexpr(
+        string, keywords=keywords, callback=callback, limit=limit
+    ))))
