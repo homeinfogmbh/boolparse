@@ -38,7 +38,7 @@ def tokenize(
     ) -> Iterator[str]:
     """Tokenize the string."""
 
-    buff = max(len(operator) for operator in keywords)
+    buff = max(map(len, keywords))
     window = ''
     statements = 0
     skip = 0
