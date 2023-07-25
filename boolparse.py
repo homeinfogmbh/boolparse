@@ -3,11 +3,11 @@
 from typing import Callable, Iterator
 
 
-__all__ = ['SecurityError', 'evaluate']
+__all__ = ["SecurityError", "evaluate"]
 
 
-PARENTHESES = frozenset({'(', ')'})
-KEYWORDS = frozenset({'and', 'or', 'not'})
+PARENTHESES = frozenset({"(", ")"})
+KEYWORDS = frozenset({"and", "or", "not"})
 
 
 class SecurityError(Exception):
@@ -24,7 +24,7 @@ def bool_val(token: str, callback: Callable[[str], bool]) -> str:
     if isinstance(callback_result, bool):
         return str(callback_result)
 
-    raise SecurityError('Callback function did not return a boolean value.')
+    raise SecurityError("Callback function did not return a boolean value.")
 
 
 def tokenize(word: str) -> Iterator[str]:
@@ -34,7 +34,7 @@ def tokenize(word: str) -> Iterator[str]:
         if char in PARENTHESES:
             yield word[:index]
             yield char
-            yield from tokenize(word[index+1:])
+            yield from tokenize(word[index + 1 :])
             break
     else:
         yield word
@@ -52,9 +52,10 @@ def boolexpr(expression: str, callback: Callable[[str], bool]) -> Iterator[str]:
 
 
 def evaluate(
-        expression: str, *,
-        callback: Callable[[str], bool] = lambda s: s.casefold() == 'true'
-    ) -> bool:
+    expression: str,
+    *,
+    callback: Callable[[str], bool] = lambda s: s.casefold() == "true"
+) -> bool:
     """Safely evaluate a boolean expression."""
 
-    return bool(eval(' '.join(boolexpr(expression, callback))))
+    return bool(eval(" ".join(boolexpr(expression, callback))))
